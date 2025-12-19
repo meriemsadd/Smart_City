@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -30,6 +32,17 @@ class User
 
     #[ORM\Column]
     private ?int $points = null;
+
+    /**
+     * @var Collection<int, Problem>
+     */
+    #[ORM\OneToMany(targetEntity: Problem::class, mappedBy: 'citizen')]
+    private Collection $problems;
+
+    public function __construct()
+    {
+        $this->problems = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -104,6 +117,36 @@ class User
     public function setPoints(int $points): static
     {
         $this->points = $points;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Problem>
+     */
+    public function getProblems(): Collection
+    {
+        return $this->problems;
+    }
+
+    public function addProblem(Problem $problem): static
+    {
+        if (!$this->problems->contains($problem)) {
+            $this->problems->add($problem);
+            $problem->setCitizen($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProblem(Problem $problem): static
+    {
+        if ($this->problems->removeElement($problem)) {
+            // set the owning side to null (unless already changed)
+            if ($problem->getCitizen() === $this) {
+                $problem->setCitizen(null);
+            }
+        }
 
         return $this;
     }
